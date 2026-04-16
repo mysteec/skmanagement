@@ -12,15 +12,25 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'https://skmanagement-s33f.vercel.app',
   process.env.FRONTEND_URL,
-].filter(Boolean);
+].filter(Boolean).map(origin => origin.trim().replace(/\/$/, ""));
 
 app.use(cors({ 
   origin: function (origin, callback) {
     // allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1 && process.env.NODE_ENV === 'production') {
+    
+    const cleanOrigin = origin.trim().replace(/\/$/, "");
+    
+    if (allowedOrigins.includes(cleanOrigin)) {
+      return callback(null, true);
+    }
+    
+    // In production, be strict. In development, allow all.
+    if (process.env.NODE_ENV === 'production') {
+      console.log('CORS blocked origin:', cleanOrigin);
       return callback(new Error('CORS profile does not allow this origin'), false);
     }
+    
     return callback(null, true);
   },
   credentials: true 
